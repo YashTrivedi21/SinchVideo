@@ -14,10 +14,9 @@ var showUI = function () {
 
 
 /*** If no valid session could be started, show the login interface ***/
-
-var showLoginUI = function () {
-    $('form#userForm').css('display', 'inline');
-}
+const showLoginUI = function () {
+    $('form#userForm').css('display', 'block');
+};
 
 
 //*** Set up sinchClient ***/
@@ -36,13 +35,11 @@ sinchClient = new SinchClient({
 sinchClient.startActiveConnection();
 
 /*** Name of session, can be anything. ***/
-
-var sessionName = 'sinchSessionVIDEO-' + sinchClient.applicationKey;
+const sessionName = 'sinchSessionVIDEO-' + sinchClient.applicationKey;
 
 
 /*** Check for valid session. NOTE: Deactivated by default to allow multiple browser-tabs with different users. ***/
-
-var sessionObj = JSON.parse(localStorage[sessionName] || '{}');
+const sessionObj = JSON.parse(localStorage[sessionName] || '{}');
 if (sessionObj.userId) {
     sinchClient.start(sessionObj)
         .then(function () {
@@ -70,7 +67,7 @@ $('button#createUser').on('click', function (event) {
     $('button#createUser').attr('disabled', true);
     clearError();
 
-    var signUpObj = {};
+    const signUpObj = {};
     signUpObj.username = $('input#username').val();
     signUpObj.password = $('input#password').val();
 

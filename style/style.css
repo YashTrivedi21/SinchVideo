@@ -367,11 +367,13 @@ form#newCall button {
 }
 
 video {
-    width: 260px;
-    height: 195px;
-    margin: 10px 12px 10px 12px;
-    border: 1px solid #B0B0B0;
-    border-radius: 3px;
+    width: 533px;
+    height: 300px;
+    /*margin-top: 12px;*/
+    /*margin-right: 10px;*/
+    border: 2px solid #B0B0B0;
+    border-radius: 1px;
+    flex-direction: row;
     display: none;
 }
 
