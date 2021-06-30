@@ -1,201 +1,221 @@
+let global_username = "";
 
-var global_username = '';
-
-/*** After successful authentication, show user interface ***/
-
-var showUI = function () {
-    $('div#call').show();
-    $('form#userForm').css('display', 'none');
-    $('div#userInfo').css('display', 'inline');
-    $('h3#login').css('display', 'none');
-    $('video').show();
-    $('span#username').text(global_username);
-}
-
-
-/*** If no valid session could be started, show the login interface ***/
-const showLoginUI = function () {
-    $('form#userForm').css('display', 'block');
+// once user has signed up/ logged in we show them the calling form
+const render = function() {
+    $("div#call").show();
+    $("form#userForm").css("display", "none");
+    $("div#userInfo").css("display", "inline");
+    $("h3#login").css("display", "none");
+    $("video").show();
+    $("span#username").text(global_username);
 };
 
+// for unsuccessful try show the login interface
+const renderLoginUI = function() {
+    $("form#userForm").css("display", "block");
+};
 
-//*** Set up sinchClient ***/
+// Set up sinchClient
 
 sinchClient = new SinchClient({
-    // applicationKey: '6e2194a9-ef75-4a53-a309-c4043a7eb3e4',
     applicationKey: KEY,
     capabilities: { calling: true, video: true },
     supportActiveConnection: true,
-    //Note: For additional loging, please uncomment the three rows below
-    onLogMessage: function (message) {
+    //below function is for logging purpose
+    onLogMessage: function(message) {
         console.log(message);
-    },
+    }
 });
 
 sinchClient.startActiveConnection();
 
-/*** Name of session, can be anything. ***/
-const sessionName = 'sinchSessionVIDEO-' + sinchClient.applicationKey;
+// Set name of session
+const sessionName = "sinchSessionVIDEO-" + sinchClient.applicationKey;
 
-
-/*** Check for valid session. NOTE: Deactivated by default to allow multiple browser-tabs with different users. ***/
-const sessionObj = JSON.parse(localStorage[sessionName] || '{}');
+// Check for valid session
+const sessionObj = JSON.parse(localStorage[sessionName] || "{}");
 if (sessionObj.userId) {
-    sinchClient.start(sessionObj)
-        .then(function () {
-            global_username = sessionObj.userId;
-            //On success, show the UI
-            showUI();
-            //Store session & manage in some way (optional)
-            localStorage[sessionName] = JSON.stringify(sinchClient.getSession());
-        })
-        .fail(function () {
-            //No valid session, take suitable action, such as prompting for username/password, then start sinchClient again with login object
-            showLoginUI();
+    sinchClient.start(sessionObj).then(() => {
+        global_username = sessionObj.userId;
+        //On success, show the UI
+        render();
+    })
+        .fail(() =>  {
+            // for failed session return to login screen
+            renderLoginUI();
         });
+} else {
+    renderLoginUI();
 }
-else {
-    showLoginUI();
-}
 
+// Handle errors but show UI anyway
+const handleError = function(error) {
+    //Enable buttons
+    $("button#createUser").prop("disabled", false);
+    $("button#loginUser").prop("disabled", false);
 
-/*** Create user and start sinch for that user and save session in localStorage ***/
+    //Show error
+    $("div.error").text(error.message);
+    $("div.error").show();
+};
+// clear errors
+const logErrors = function() {
+    $("div.error").hide();
+};
 
-$('button#createUser').on('click', function (event) {
+// Create user and start sinch for that user and save session in localStorage
+$("button#createUser").on("click", function(event) {
     event.preventDefault();
-    $('button#loginUser').attr('disabled', true);
-    $('button#createUser').attr('disabled', true);
-    clearError();
+    $("button#loginUser").attr("disabled", true);
+    $("button#createUser").attr("disabled", true);
+    logErrors();
 
+    // taking username and password and binding it to sinch object
     const signUpObj = {};
-    signUpObj.username = $('input#username').val();
-    signUpObj.password = $('input#password').val();
+    signUpObj.username = $("input#username").val();
+    signUpObj.password = $("input#password").val();
 
-    //Use Sinch SDK to create a new user
-    sinchClient.newUser(signUpObj, function (ticket) {
-        //On success, start the client
-        sinchClient.start(ticket, function () {
-            global_username = signUpObj.username;
-            //On success, show the UI
-            showUI();
+    //Using Sinch SDK to create a new user
+    sinchClient
+        .newUser(signUpObj, function(ticket) {
+            //On success, start the client
+            sinchClient
+                .start(ticket, function() {
+                    global_username = signUpObj.username;
+                    //On success, show the UI
+                    render();
 
-            //Store session & manage in some way (optional)
-            localStorage[sessionName] = JSON.stringify(sinchClient.getSession());
-        }).fail(handleError);
-    }).fail(handleError);
+                    //Store session
+                    localStorage[sessionName] = JSON.stringify(sinchClient.getSession());
+                })
+                .fail(handleError);
+        })
+        .fail(handleError);
 });
 
+// Login user and save session in localStorage
 
-/*** Login user and save session in localStorage ***/
-
-$('button#loginUser').on('click', function (event) {
+$("button#loginUser").on("click", function(event) {
     event.preventDefault();
-    $('button#loginUser').attr('disabled', true);
-    $('button#createUser').attr('disabled', true);
-    clearError();
+    $("button#loginUser").attr("disabled", true);
+    $("button#createUser").attr("disabled", true);
+    logErrors();
 
-    var signInObj = {};
-    signInObj.username = $('input#username').val();
-    signInObj.password = $('input#password').val();
+    // again take values and use it for sinch user
+    const signInObj = {};
+    signInObj.username = $("input#username").val();
+    signInObj.password = $("input#password").val();
 
     //Use Sinch SDK to authenticate a user
-    sinchClient.start(signInObj, function () {
-        global_username = signInObj.username;
-        //On success, show the UI
-        showUI();
-
-        //Store session & manage in some way (optional)
-        localStorage[sessionName] = JSON.stringify(sinchClient.getSession());
-    }).fail(handleError);
+    sinchClient
+        .start(signInObj, function() {
+            global_username = signInObj.username;
+            //On success, show the UI
+            render();
+            //Store session
+            localStorage[sessionName] = JSON.stringify(sinchClient.getSession());
+        })
+        .fail(handleError);
 });
 
-/*** Create audio elements for progresstone and incoming sound */
-const audioProgress = document.createElement('audio');
-const audioRingTone = document.createElement('audio');
-const videoIncoming = document.getElementById('videoincoming');
-const videoOutgoing = document.getElementById('videooutgoing');
+// using ringtones for audio and binding video
+const audioStats = document.createElement("audio");
+const audioTone = document.createElement("audio");
+const userVideo = document.getElementById("videoincoming");
+const guestVideo = document.getElementById("videooutgoing");
 
-/*** Define listener for managing calls ***/
-var callListeners = {
-    onCallProgressing: function (call) {
-        audioProgress.src = 'style/ringback.wav';
-        audioProgress.loop = true;
-        audioProgress.play();
-        videoOutgoing.srcObject = call.outgoingStream;
+
+// Define listener for managing calls
+const callListeners = {
+    onCallProgressing: function(call) {
+        audioStats.src = "style/ringback.wav";
+        audioStats.loop = true;
+        audioStats.play();
+        guestVideo.srcObject = call.outgoingStream;
 
         //Report call stats
-        $('div#callLog').append('<div id="stats">Ringing...</div>');
+        $("div#callLog").append('<div id="stats">Ringing...</div>');
     },
-    onCallEstablished: function (call) {
-        videoOutgoing.srcObject = call.outgoingStream;
-        videoIncoming.srcObject = call.incomingStream;
-        audioProgress.pause();
-        audioRingTone.pause();
+    onCallEstablished: function(call) {
+        guestVideo.srcObject = call.outgoingStream;
+        userVideo.srcObject = call.incomingStream;
+        audioStats.pause();
+        audioTone.pause();
+
         //Report call stats
-        var callDetails = call.getDetails();
-        $('div#callLog').append('<div id="stats">Answered at: ' + (callDetails.establishedTime && new Date(callDetails.establishedTime)) + '</div>');
+        const callDetails = call.getDetails();
+        $("div#callLog").append(
+            '<div id="stats">Answered at: ' +
+            (callDetails.establishedTime && new Date(callDetails.establishedTime)) +
+            "</div>"
+        );
     },
-    onCallEnded: function (call) {
-        audioProgress.pause();
-        audioRingTone.pause();
-        videoIncoming.srcObject = null;
-        videoOutgoing.srcObject = null;
+    onCallEnded: function(call) {
+        audioStats.pause();
+        audioTone.pause();
+        userVideo.srcObject = null;
+        guestVideo.srcObject = null;
 
-        $('button').removeClass('incall');
-        $('button').removeClass('callwaiting');
+        $("button").removeClass("incall");
+        $("button").removeClass("callwaiting");
 
         //Report call stats
-        var callDetails = call.getDetails();
-        $('div#callLog').append('<div id="stats">Ended: ' + new Date(callDetails.endedTime) + '</div>');
-        $('div#callLog').append('<div id="stats">Duration (s): ' + callDetails.duration + '</div>');
-        $('div#callLog').append('<div id="stats">End cause: ' + call.getEndCause() + '</div>');
+        const callDetails = call.getDetails();
+        $("div#callLog").append(
+            '<div id="stats">Ended: ' + new Date(callDetails.endedTime) + "</div>"
+        );
+        $("div#callLog").append(
+            '<div id="stats">Duration (s): ' + callDetails.duration + "</div>"
+        );
+        $("div#callLog").append(
+            '<div id="stats">End cause: ' + call.getEndCause() + "</div>"
+        );
         if (call.error) {
-            $('div#callLog').append('<div id="stats">Failure message: ' + call.error.message + '</div>');
+            $("div#callLog").append(
+                '<div id="stats">Failure message: ' + call.error.message + "</div>"
+            );
         }
     }
-}
+};
 
-/*** Set up callClient and define how to handle incoming calls ***/
+// Seting up callClient
+const callClient = sinchClient.getCallClient();
+callClient.initStream().then(function() {
 
-var callClient = sinchClient.getCallClient();
-callClient.initStream().then(function () { // Directly init streams, in order to force user to accept use of media sources at a time we choose
-    $('div.frame').not('#chromeFileWarning').show();
+    // Directly init stream
+    $("div.frame").not("#chromeFileWarning").show();
 });
-var call;
+let call;
 
 callClient.addEventListener({
-    onIncomingCall: function (incomingCall) {
+    onIncomingCall: function(incomingCall) {
         //Play some groovy tunes
-        audioRingTone.src = 'style/phone_ring.wav';
-        audioRingTone.loop = true;
-        audioRingTone.play();
+        audioTone.src = "style/phone_ring.wav";
+        audioTone.loop = true;
+        audioTone.play();
 
         //Print statistics
-        $('div#callLog').append('<div id="title">Incoming call from ' + incomingCall.fromId + '</div>');
-        $('div#callLog').append('<div id="stats">Ringing...</div>');
-        $('button').addClass('incall');
+        $("div#callLog").append('<div id="title">Incoming call from ' + incomingCall.fromId + "</div>");
+        $("div#callLog").append('<div id="stats">Ringing...</div>');
+        $("button").addClass("incall");
 
         //Manage the call object
         call = incomingCall;
         call.addEventListener(callListeners);
-        $('button').addClass('callwaiting');
-
-        //call.answer(); //Use to test auto answer
-        //call.hangup();
+        $("button").addClass("callwaiting");
     }
 });
 
-$('button#answer').click(function (event) {
+$("button#answer").click(function(event) {
     event.preventDefault();
 
     if ($(this).hasClass("callwaiting")) {
-        clearError();
+        logErrors();
 
         try {
             call.answer();
-            $('button').removeClass('callwaiting');
-        }
-        catch (error) {
+            $("button").removeClass("callwaiting");
+        } catch (error) {
             handleError(error);
         }
     }
@@ -203,82 +223,62 @@ $('button#answer').click(function (event) {
 
 /*** Make a new data call ***/
 
-$('button#call').click(function (event) {
+$("button#call").click(function(event) {
     event.preventDefault();
 
     if (!$(this).hasClass("incall") && !$(this).hasClass("callwaiting")) {
-        clearError();
+        logErrors();
 
-        $('button').addClass('incall');
+        $("button").addClass("incall");
 
-        $('div#callLog').append('<div id="title">Calling ' + $('input#callUserName').val() + '</div>');
+        $("div#callLog").append(
+            '<div id="title">Calling ' + $("input#callUserName").val() + "</div>"
+        );
 
-        console.log('Placing call to: ' + $('input#callUserName').val());
-        call = callClient.callUser($('input#callUserName').val());
+        console.log("Placing call to: " + $("input#callUserName").val());
+        call = callClient.callUser($("input#callUserName").val());
 
         call.addEventListener(callListeners);
     }
 });
 
-/*** Hang up a call ***/
+// Hang up a call
 
-$('button#hangup').click(function (event) {
+$("button#hangup").click(function(event) {
     event.preventDefault();
 
     if ($(this).hasClass("incall")) {
-        clearError();
+        logErrors();
 
-        console.info('Will request hangup..');
+        console.info("Will request hangup..");
 
         call && call.hangup();
     }
 });
 
-/*** Log out user ***/
+// Log out user
 
-$('button#logOut').on('click', function (event) {
+$("button#logOut").on("click", function(event) {
     event.preventDefault();
-    clearError();
+    logErrors();
 
     //Stop the sinchClient
     sinchClient.terminate();
-    //Note: sinchClient object is now considered stale. Instantiate new sinchClient to reauthenticate, or reload the page.
 
-    //Remember to destroy / unset the session info you may have stored
+    //Destroy the session info
     delete localStorage[sessionName];
 
     //Allow re-login
-    $('button#loginUser').attr('disabled', false);
-    $('button#createUser').attr('disabled', false);
+    $("button#loginUser").attr("disabled", false);
+    $("button#createUser").attr("disabled", false);
 
-    //Reload page.
+    //Reload page
     window.location.reload();
 });
 
-
-/*** Handle errors, report them and re-enable UI ***/
-
-var handleError = function (error) {
-    //Enable buttons
-    $('button#createUser').prop('disabled', false);
-    $('button#loginUser').prop('disabled', false);
-
-    //Show error
-    $('div.error').text(error.message);
-    $('div.error').show();
+// Chrome check for file
+if (location.protocol == "file:" && navigator.userAgent.toLowerCase().indexOf("chrome") > -1) {
+    $("div#chromeFileWarning").show();
 }
 
-/** Always clear errors **/
-var clearError = function () {
-    $('div.error').hide();
-}
-
-/** Chrome check for file - This will warn developers of using file: protocol when testing WebRTC **/
-if (location.protocol == 'file:' && navigator.userAgent.toLowerCase().indexOf('chrome') > -1) {
-    $('div#chromeFileWarning').show();
-}
-
-$('button').prop('disabled', false); //Solve Firefox issue, ensure buttons always clickable after load
-
-
-
+$("button").prop("disabled", false); //Solve Firefox issue, ensure buttons always clickable after load
