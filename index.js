@@ -345,3 +345,16 @@ fetchChat.on("child_added", function (snapshot) {
     // append the message on the page
     document.getElementById("messages").innerHTML += message;
 });
+const emp = {}
+const ref = db.ref("onlineState");
+ref.onDisconnect().set(false);
+// ... sometime later
+ref.onDisconnect().set(emp);
+
+function fun(){
+    document.getElementById("videoincoming").muted=true;
+}
+
+function unfun(){
+    document.getElementById("videoincoming").muted=false;
+}
