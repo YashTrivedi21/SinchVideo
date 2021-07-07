@@ -49,7 +49,7 @@ div.clearfix {
 div.frame {
     padding: 0px 15px 0px 30px;
     margin: 0px 0px;
-    float: left;
+    /*     float: left; */
     width: 578px;
     display: none;
 }
@@ -377,11 +377,6 @@ video {
     display: none;
 }
 
-
-#messages{
-    padding-bottom: 30%;
-}
-
 li {
     list-style-type: none;
     margin-bottom: 10px;
@@ -401,25 +396,30 @@ li span {
 #chat {
     width: 80%;
     margin: auto;
+    position: relative;
 }
 
 #message-form {
+    margin-left: 40px;
+    display: flex;
     text-align: center;
-    position: fixed;
+    position: sticky;
     left: 0;
     bottom: 0;
-    width: 100%;
+    width: 50%;
     background-color: #b7b5b9;
 }
 
 input#message-input {
-    width: 70%;
+    width: 75%;
     height: 50px;
+    margin: 5px;
 }
 
 button#message-btn {
     width: 25%;
     height: 50px;
+    margin: 5px;
 }
 
 .sent {
@@ -433,5 +433,10 @@ button#message-btn {
     color: #6929ca;
 }
 
+#unmute{
+    float: none
+}
 
-
+#mute{
+    float: none
+}

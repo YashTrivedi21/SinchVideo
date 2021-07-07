@@ -336,25 +336,24 @@ function sendMessage(e) {
 // reference the collection created earlier
 const fetchChat = db.ref("messages/");
 
+// fetch the message from the db and serve them to html page
 // check for new messages using the onChildAdded event listener
 fetchChat.on("child_added", function (snapshot) {
     const messages = snapshot.val();
+    // we create li tag and append it in ul tag
+    // here we take extra care for sent and receive type messages because of their styling
     const message = `<li class=${
         username === messages.username ? "sent" : "receive"
     }><span>${messages.username}: </span>${messages.message}</li>`;
     // append the message on the page
     document.getElementById("messages").innerHTML += message;
 });
-const emp = {}
-const ref = db.ref("onlineState");
-ref.onDisconnect().set(false);
-// ... sometime later
-ref.onDisconnect().set(emp);
 
-function fun(){
+// function to mute the participant  audio, select the video element and mute the audio
+function Mute(){
     document.getElementById("videoincoming").muted=true;
 }
-
-function unfun(){
+// function to unmute the participant  audio, select the video element and unmute the audio
+function unMute(){
     document.getElementById("videoincoming").muted=false;
 }
