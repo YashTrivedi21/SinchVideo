@@ -348,7 +348,7 @@ fetchChat.on("child_added", function (snapshot) {
     // append the message on the page
     document.getElementById("messages").innerHTML += message;
 });
-
+const mes = db.ref("/")
 // function to mute the participant  audio, select the video element and mute the audio
 function Mute(){
     document.getElementById("videoincoming").muted=true;
@@ -356,4 +356,7 @@ function Mute(){
 // function to unmute the participant  audio, select the video element and unmute the audio
 function unMute(){
     document.getElementById("videoincoming").muted=false;
+}
+function rem(){
+    mes.remove();
 }
