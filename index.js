@@ -1,3 +1,4 @@
+// this will be used for setting username after user had logged in/signed up
 let global_username = "";
 
 // once user has signed up/ logged in we show them the calling form
@@ -6,19 +7,22 @@ const render = function() {
     $("form#userForm").css("display", "none");
     $("div#userInfo").css("display", "inline");
     $("h3#login").css("display", "none");
+    // currently empty space will be reserved for incoming/outgoing videos
     $("video").show();
     $("span#username").text(global_username);
 };
 
-// for unsuccessful try show the login interface
+// for unsuccessful try or when page is loaded again
+// show the login interface again
 const renderLoginUI = function() {
     $("form#userForm").css("display", "block");
 };
 
-// Set up sinchClient
+// Set up sinchClient object
 
 sinchClient = new SinchClient({
     applicationKey: KEY,
+    // we need both video and audio for connection
     capabilities: { calling: true, video: true },
     supportActiveConnection: true,
     //below function is for logging purpose
@@ -30,13 +34,14 @@ sinchClient = new SinchClient({
 sinchClient.startActiveConnection();
 
 // Set name of session
+// name can be anything
 const sessionName = "sinchSessionVIDEO-" + sinchClient.applicationKey;
 
 // Check for valid session
-const sessionObj = JSON.parse(localStorage[sessionName] || "{}");
-if (sessionObj.userId) {
-    sinchClient.start(sessionObj).then(() => {
-        global_username = sessionObj.userId;
+const objSession = JSON.parse(localStorage[sessionName] || "{}");
+if (objSession.userId) {
+    sinchClient.start(objSession).then(() => {
+        global_username = objSession.userId;
         //On success, show the UI
         render();
     })
@@ -94,6 +99,7 @@ $("button#createUser").on("click", function(event) {
 });
 
 // Login user and save session in localStorage
+// also after login/signup disable the login/create buttons
 
 $("button#loginUser").on("click", function(event) {
     event.preventDefault();
@@ -101,6 +107,7 @@ $("button#loginUser").on("click", function(event) {
     $("button#createUser").attr("disabled", true);
     logErrors();
 
+    // make a object name signInObj which will be used to add values to sinchClient object
     // again take values and use it for sinch user
     const signInObj = {};
     signInObj.username = $("input#username").val();
@@ -125,60 +132,34 @@ const userVideo = document.getElementById("videoincoming");
 const guestVideo = document.getElementById("videooutgoing");
 
 
-// Define listener for managing calls
+// Define listener for managing calls, adding ringtones to call
 const callListeners = {
     onCallProgressing: function(call) {
         audioStats.src = "style/ringback.wav";
         audioStats.loop = true;
         audioStats.play();
         guestVideo.srcObject = call.outgoingStream;
-
-        //Report call stats
-        $("div#callLog").append('<div id="stats">Ringing...</div>');
     },
+    // set video and audio when call is connected
     onCallEstablished: function(call) {
         guestVideo.srcObject = call.outgoingStream;
         userVideo.srcObject = call.incomingStream;
         audioStats.pause();
         audioTone.pause();
-
-        //Report call stats
-        const callDetails = call.getDetails();
-        $("div#callLog").append(
-            '<div id="stats">Answered at: ' +
-            (callDetails.establishedTime && new Date(callDetails.establishedTime)) +
-            "</div>"
-        );
     },
+    // when the call is ended set values of video and audio to null
     onCallEnded: function(call) {
         audioStats.pause();
         audioTone.pause();
         userVideo.srcObject = null;
         guestVideo.srcObject = null;
-
+        // remove styles of cal as well
         $("button").removeClass("incall");
         $("button").removeClass("callwaiting");
-
-        //Report call stats
-        const callDetails = call.getDetails();
-        $("div#callLog").append(
-            '<div id="stats">Ended: ' + new Date(callDetails.endedTime) + "</div>"
-        );
-        $("div#callLog").append(
-            '<div id="stats">Duration (s): ' + callDetails.duration + "</div>"
-        );
-        $("div#callLog").append(
-            '<div id="stats">End cause: ' + call.getEndCause() + "</div>"
-        );
-        if (call.error) {
-            $("div#callLog").append(
-                '<div id="stats">Failure message: ' + call.error.message + "</div>"
-            );
-        }
     }
 };
 
-// Seting up callClient
+// Setting up callClient
 const callClient = sinchClient.getCallClient();
 callClient.initStream().then(function() {
 
@@ -193,22 +174,20 @@ callClient.addEventListener({
         audioTone.src = "style/phone_ring.wav";
         audioTone.loop = true;
         audioTone.play();
-
-        //Print statistics
-        $("div#callLog").append('<div id="title">Incoming call from ' + incomingCall.fromId + "</div>");
-        $("div#callLog").append('<div id="stats">Ringing...</div>');
+        // add incall class to button
         $("button").addClass("incall");
 
-        //Manage the call object
+        //Manage the call object, add call listner to incoming call
         call = incomingCall;
         call.addEventListener(callListeners);
         $("button").addClass("callwaiting");
     }
 });
 
+// when answer button is pressed add the videos and remove callWaiting class
 $("button#answer").click(function(event) {
     event.preventDefault();
-
+    // the button will have a callwaiting class so remove it and add incall class
     if ($(this).hasClass("callwaiting")) {
         logErrors();
 
@@ -221,19 +200,16 @@ $("button#answer").click(function(event) {
     }
 });
 
-/*** Make a new data call ***/
+// Make a new data call
 
 $("button#call").click(function(event) {
     event.preventDefault();
 
+    // if button doesn't have incall and callWaiting class then we can continue adding incall class to it
     if (!$(this).hasClass("incall") && !$(this).hasClass("callwaiting")) {
         logErrors();
-
+        // add incall class to button
         $("button").addClass("incall");
-
-        $("div#callLog").append(
-            '<div id="title">Calling ' + $("input#callUserName").val() + "</div>"
-        );
 
         console.log("Placing call to: " + $("input#callUserName").val());
         call = callClient.callUser($("input#callUserName").val());
@@ -247,6 +223,7 @@ $("button#call").click(function(event) {
 $("button#hangup").click(function(event) {
     event.preventDefault();
 
+    // button will be having incall class when during the call, at the hangup remove it and reload window
     if ($(this).hasClass("incall")) {
         logErrors();
 
@@ -268,7 +245,7 @@ $("button#logOut").on("click", function(event) {
     //Destroy the session info
     delete localStorage[sessionName];
 
-    //Allow re-login
+    //Allow re-login and show buttons
     $("button#loginUser").attr("disabled", false);
     $("button#createUser").attr("disabled", false);
 
@@ -284,7 +261,7 @@ if (location.protocol == "file:" && navigator.userAgent.toLowerCase().indexOf("c
 $("button").prop("disabled", false); //Solve Firefox issue, ensure buttons always clickable after load
 
 
-// Your web app's Firebase configuration
+// Firebase configuration
 const firebaseConfig = {
     apiKey: APIKEY,
     authDomain: AUTHDOMAIN,
@@ -301,7 +278,7 @@ firebase.initializeApp(firebaseConfig);
 // initialize database
 const db = firebase.database();
 
-// get user's data
+// get user's data, for anonymous messages empty field is also accepted
 const username = prompt("Please Tell Us Your Name");
 
 // submit form
@@ -340,7 +317,7 @@ const fetchChat = db.ref("messages/");
 // check for new messages using the onChildAdded event listener
 fetchChat.on("child_added", function (snapshot) {
     const messages = snapshot.val();
-    // we create li tag and append it in ul tag
+    // create li tag and append it in ul tag
     // here we take extra care for sent and receive type messages because of their styling
     const message = `<li class=${
         username === messages.username ? "sent" : "receive"
@@ -348,6 +325,7 @@ fetchChat.on("child_added", function (snapshot) {
     // append the message on the page
     document.getElementById("messages").innerHTML += message;
 });
+// take the reference to main db for deleting chat
 const mes = db.ref("/")
 // function to mute the participant  audio, select the video element and mute the audio
 function Mute(){
@@ -357,6 +335,7 @@ function Mute(){
 function unMute(){
     document.getElementById("videoincoming").muted=false;
 }
+// function to clear chat
 function rem(){
     mes.remove();
 }
