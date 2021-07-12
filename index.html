@@ -2,7 +2,7 @@
 <head>
     <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
     <meta content="utf-8" http-equiv="encoding"/>
-    <title>Sinch VIDEO Sample app</title>
+    <title>Video Chat</title>
 
     <link
             rel="stylesheet"
@@ -40,7 +40,8 @@
 <!-- navbar ends here-->
 
 <div class="container" style="width: 700px">
-    <!-- this div comes into picture only when there is some error related to browser, it is provided default by Sinch SDk -->
+    <!-- this div comes into picture only when there is some error related to browser,
+    it is provided default by Sinch SDK for error handling-->
     <div id="chromeFileWarning" class="frame big">
         <b style="color: red;">Warning!</b> Protocol "file" used to load page in
         Chrome.<br/><br/>
@@ -78,7 +79,9 @@
     </div>
     <br/>
     <br/>
-    <!-- this div is for showing user after the sign-up/log-in-->
+
+    <!-- this div is for showing all calling functionality
+    like call, answer, hangup and input box for user to be called-->
     <div class="frame">
         <h3>Video Call</h3>
         <div id="call">
@@ -92,6 +95,7 @@
             </form>
         </div>
         <div class="clearfix"><br/></div>
+
         <!-- this div is for adding video frame for both incoming and outgoing calls -->
         <div>
             <video id="videooutgoing" autoplay muted></video>
@@ -116,7 +120,7 @@
     </form>
 </div>
 
-<!-- scripts -->
+<!-- 3rd party scripts -->
 <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.2.1/firebase-database.js"></script>
 
